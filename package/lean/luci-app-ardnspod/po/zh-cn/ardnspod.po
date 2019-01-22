@@ -1,0 +1,57 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Luci ArDnspod\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-06-23 20:16+0800\n"
+"PO-Revision-Date: 2015-06-23 20:17+0800\n"
+"Last-Translator: plutoghost <plutoghost@gmail.com>\n"
+"Language-Team: PandoraBox Team\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.1\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+
+msgid "ArDnspod"
+msgstr "Dnspod动态域名解析"
+
+msgid "Configure dynamic dnspod resolve by ArDnspod shell script."
+msgstr "配置Dnspod动态域名"
+
+msgid "login email"
+msgstr "登录邮箱"
+
+msgid "the dnspod login username"
+msgstr "登录DNSPOD的用户名"
+
+msgid "login password"
+msgstr "登录密码"
+
+msgid "the dnspod login password"
+msgstr "登录DNSPOD的密码"
+
+msgid "login token"
+msgstr "登陆令牌"
+
+msgid "recommend"
+msgstr "推荐使用"
+
+msgid "main domain"
+msgstr "主域名" 
+
+msgid "the domain name to be resolved."
+msgstr "想要解析的主域名。"
+
+msgid "sub domain"
+msgstr "子域名"
+
+msgid "the sub domain name to be resolved."
+msgstr "想要解析的子域名。"
+
+msgid "general settings"
+msgstr "登录设置"
+
+msgid "domain settings"
+msgstr "域名"

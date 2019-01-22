@@ -1,0 +1,9 @@
+config general
+	option enabled '1'
+	option login_token ''
+	option login_email ''
+	option login_password ''
+
+config domain
+	option sub_domain ''
+	option main_domain ''

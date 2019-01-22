@@ -1,0 +1,66 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2015 OpenWrt.org
+
+START=60
+USE_PROCD=1
+
+BIN=/usr/bin/ardnspod.sh
+CONFIG=/var/etc/ardnspod.conf
+LOGFILE=/tmp/ardnspod.log
+
+
+validate_domain_section() {
+	uci_validate_section ardnspod domain "${1}" \
+		'sub_domain:string' \
+		'main_domain:string'
+}
+
+validate_ardnspod_section() {
+	uci_validate_section ardnspod general "${1}" \
+		'enabled:uinteger' \
+		'login_email:string' \
+		'login_password:string' \
+		'login_token:string'
+}
+
+setup_domain() {
+	validate_domain_section "${1}" || {
+		echo "validation failed"
+		return 1
+	}
+
+	 [ -n "${sub_domain}" ]  ||  return 0
+	 [ -n "${main_domain}" ] ||  return 0
+	 
+
+	echo "arDdnsCheck ${main_domain} ${sub_domain}"  >> $CONFIG
+}
+
+setup_config() {
+	local enabled login_email login_password login_token
+
+	validate_ardnspod_section "${1}" || {
+		echo "validation failed"
+		return 1
+	}
+
+	[ "$enabled" -eq 0 ] && return 1
+
+	mkdir -p /var/etc
+	
+	echo "# For security reasons, it is recommended that you use token-based auth instead " > $CONFIG
+	[ -n "$login_email" ] && echo "arMail=$login_email" >> $CONFIG
+	[ -n "$login_password" ] && echo "arPass=$login_password" >> $CONFIG
+	[ -n "$login_token" ] && echo "arToken=$login_token" >> $CONFIG
+
+	
+	return 0
+}
+
+start_service() {
+	config_load ardnspod
+	config_foreach setup_config general || return
+	config_foreach setup_domain domain
+	sh $BIN  >> "$LOGFILE" 2>&1
+	
+}
