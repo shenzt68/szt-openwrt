@@ -25,7 +25,8 @@ sed -i 's/\"services\"/\"nas\"/g' /usr/lib/lua/luci/controller/mjpg-streamer.lua
 sed -i 's/\"services\"/\"nas\"/g' /usr/lib/lua/luci/controller/p910nd.lua
 sed -i 's/\"services\"/\"nas\"/g' /usr/lib/lua/luci/controller/usb_printer.lua
 sed -i 's/\"services\"/\"nas\"/g' /usr/lib/lua/luci/controller/xunlei.lua
-
+sed -i 's/\"services\"/\"vpn\"/g' /usr/lib/lua/luci/controller/ocserv.lua
+sed -i 's/\"services\"/\"vpn\"/g' /usr/lib/lua/luci/controller/openvpn.lua
 sed -i 's/services/nas/g'  /usr/lib/lua/luci/view/minidlna_status.htm
 uci set minidlna.config.enabled=0
 uci commit minidlna
@@ -53,7 +54,7 @@ sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
 wifi up
 
 sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
-echo "DISTRIB_REVISION='R9.1.1 By Lean'" >> /etc/openwrt_release
+echo "DISTRIB_REVISION='R5.1 By ShenZT'" >> /etc/openwrt_release
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
 echo "DISTRIB_DESCRIPTION='OpenWrt '" >> /etc/openwrt_release
 
