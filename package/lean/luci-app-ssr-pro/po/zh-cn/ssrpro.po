@@ -4,6 +4,9 @@ msgstr "<strong><font color=\"green\">ShadowsocksR 正在运行</font></strong>"
 msgid "<strong><font color=\"red\">ShadowsocksR is Not Running</font></strong>"
 msgstr "<strong><font color=\"red\">ShadowsocksR 没有运行</font></strong>"
 
+msgid "Recommend SSR"
+msgstr "推荐酸奶服务"
+
 msgid "Shadowsocksr Transparent Proxy"
 msgstr "ShadowsocksR 透明代理"
 

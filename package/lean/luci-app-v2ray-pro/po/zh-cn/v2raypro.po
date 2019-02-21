@@ -4,6 +4,9 @@ msgstr "<strong><font color=\"green\">V2Ray 正在运行</font></strong>"
 msgid "<strong><font color=\"red\">V2Ray is Not Running</font></strong>"
 msgstr "<strong><font color=\"red\">V2Ray 没有运行</font></strong>"
 
+msgid "Recommend V2Ray"
+msgstr "推荐V2射线服务"
+
 msgid "V2Ray Transparent Proxy"
 msgstr "V2Ray 透明代理"
 
@@ -114,3 +117,9 @@ msgstr "文件已保存到"
 
 msgid "No specify upload file."
 msgstr "未指定上传文件"
+
+msgid "Severse Setting"
+msgstr "反向代理设置"
+
+msgid "Server domain"
+msgstr "反向代理域名"
