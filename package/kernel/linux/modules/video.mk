@@ -166,7 +166,9 @@ define KernelPackage/drm
   HIDDEN:=1
   DEPENDS:=+kmod-dma-buf +kmod-i2c-core
   KCONFIG:=CONFIG_DRM
-  FILES:=$(LINUX_DIR)/drivers/gpu/drm/drm.ko
+  FILES:= \
+	$(LINUX_DIR)/drivers/gpu/drm/drm.ko \
+	$(LINUX_DIR)/drivers/gpu/drm/drm_panel_orientation_quirks.ko@ge4.15
   AUTOLOAD:=$(call AutoLoad,05,drm)
 endef
 
@@ -175,6 +177,28 @@ define KernelPackage/drm/description
 endef
 
 $(eval $(call KernelPackage,drm))
+
+define KernelPackage/drm-amdgpu
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=AMDGPU DRM support
+  DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-drm +kmod-i2c-algo-bit +amdgpu-firmware
+  KCONFIG:=CONFIG_DRM_AMDGPU \
+	CONFIG_DRM_AMDGPU_SI=y \
+	CONFIG_DRM_AMDGPU_CIK=y \
+	CONFIG_DRM_AMD_DC=y \
+	CONFIG_DEBUG_KERNEL_DC=n
+  FILES:=$(LINUX_DIR)/drivers/gpu/drm/amd/amdgpu/amdgpu.ko \
+	$(LINUX_DIR)/drivers/gpu/drm/scheduler/gpu-sched.ko@ge4.15 \
+	$(LINUX_DIR)/drivers/gpu/drm/amd/lib/chash.ko@ge4.15
+  AUTOLOAD:=$(call AutoProbe,amdgpu)
+endef
+
+define KernelPackage/drm-amdgpu/description
+  Direct Rendering Manager (DRM) support for AMDGPU Cards
+endef
+
+$(eval $(call KernelPackage,drm-amdgpu))
+
 
 define KernelPackage/drm-imx
   SUBMENU:=$(VIDEO_MENU)
@@ -260,6 +284,20 @@ endef
 
 $(eval $(call KernelPackage,drm-imx-ldb))
 
+define KernelPackage/drm-radeon
+  SUBMENU:=$(VIDEO_MENU)
+  TITLE:=Radeon DRM support
+  DEPENDS:=@TARGET_x86 @DISPLAY_SUPPORT +kmod-drm +kmod-i2c-algo-bit +radeon-firmware
+  KCONFIG:=CONFIG_DRM_RADEON
+  FILES:=$(LINUX_DIR)/drivers/gpu/drm/radeon/radeon.ko
+  AUTOLOAD:=$(call AutoProbe,radeon)
+endef
+
+define KernelPackage/drm-radeon/description
+  Direct Rendering Manager (DRM) support for Radeon Cards
+endef
+
+$(eval $(call KernelPackage,drm-radeon))
 
 #
 # Video Capture
