@@ -27,17 +27,17 @@ o.default = 2
 o.rmempty = false
 
 o = s:option(Flag, "city_checkip", translate("check city from ip :"), translate("check city from local ip"))
- 30 o.default = 0
- 31 
- 32 o = s:option(Value, "city", translate("city :"), translate("please input right city name"))
- 33 --o.rmempty = false
- 34 
- 35 o = s:option(ListValue, "update_time", translate("weather update_time :"))
- 36 o:value("3600",translate("1h"))
- 37 o:value("14400",translate("4h"))
- 38 o:value("43200",translate("12h"))
- 39 o.default = 3600
- 40 o.rmempty = false
+o.default = 0
+
+o = s:option(Value, "city", translate("city :"), translate("please input right city name"))
+--o.rmempty = false
+
+o = s:option(ListValue, "update_time", translate("weather update_time :"))
+o:value("3600",translate("1h"))
+o:value("14400",translate("4h"))
+o:value("43200",translate("12h"))
+o.default = 3600
+o.rmempty = false
 
 o = s:option(Flag, "psk_hide", translate("Hide Wireless password"))
 o.default = 0
