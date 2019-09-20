@@ -120,7 +120,7 @@ define Build/append-uImage-fakehdr
 endef
 
 define Build/tplink-safeloader
-       -$(STAGING_DIR_HOST)/bin/tplink-safeloader \
+	-$(STAGING_DIR_HOST)/bin/tplink-safeloader \
 		-B $(TPLINK_BOARD_ID) \
 		-V $(REVISION) \
 		-k $(IMAGE_KERNEL) \
@@ -136,10 +136,13 @@ define Build/append-dtb
 endef
 
 define Build/install-dtb
-	$(foreach dts,$(DEVICE_DTS), \
-		$(CP) \
-			$(DTS_DIR)/$(dts).dtb \
-			$(BIN_DIR)/$(IMG_PREFIX)-$(dts).dtb; \
+	$(call locked, \
+		$(foreach dts,$(DEVICE_DTS), \
+			$(CP) \
+				$(DTS_DIR)/$(dts).dtb \
+				$(BIN_DIR)/$(IMG_PREFIX)-$(dts).dtb; \
+		), \
+		install-dtb-$(IMG_PREFIX) \
 	)
 endef
 
@@ -230,8 +233,7 @@ define Build/append-uboot
 endef
 
 define Build/pad-to
-	dd if=$@ of=$@.new bs=$(1) conv=sync
-	mv $@.new $@
+	$(call Image/pad-to,$@,$(1))
 endef
 
 define Build/pad-extra
@@ -294,6 +296,20 @@ define Build/openmesh-image
 		"$(call param_get_default,rootfs,$(1),$@)" "rootfs"
 endef
 
+define Build/qsdk-ipq-factory-nand
+	$(TOPDIR)/scripts/mkits-qsdk-ipq-image.sh \
+		$@.its ubi $@
+	PATH=$(LINUX_DIR)/scripts/dtc:$(PATH) mkimage -f $@.its $@.new
+	@mv $@.new $@
+endef
+
+define Build/qsdk-ipq-factory-nor
+	$(TOPDIR)/scripts/mkits-qsdk-ipq-image.sh \
+		$@.its hlos $(IMAGE_KERNEL) rootfs $(IMAGE_ROOTFS)
+	PATH=$(LINUX_DIR)/scripts/dtc:$(PATH) mkimage -f $@.its $@.new
+	@mv $@.new $@
+endef
+
 define Build/senao-header
 	$(STAGING_DIR_HOST)/bin/mksenaofw $(1) -e $@ -o $@.new
 	mv $@.new $@
@@ -341,12 +357,14 @@ json_quote=$(subst ','\'',$(subst ",\",$(1)))
 metadata_devices=$(if $(1),$(subst "$(space)","$(comma)",$(strip $(foreach v,$(1),"$(call json_quote,$(v))"))))
 metadata_json = \
 	'{ $(if $(IMAGE_METADATA),$(IMAGE_METADATA)$(comma)) \
+		"metadata_version": "1.0", \
 		"supported_devices":[$(call metadata_devices,$(1))], \
 		"version": { \
 			"dist": "$(call json_quote,$(VERSION_DIST))", \
 			"version": "$(call json_quote,$(VERSION_NUMBER))", \
 			"revision": "$(call json_quote,$(REVISION))", \
-			"board": "$(call json_quote,$(BOARD))" \
+			"target": "$(call json_quote,$(TARGETID))", \
+			"board": "$(call json_quote,$(if $(BOARD_NAME),$(BOARD_NAME),$(DEVICE_NAME)))" \
 		} \
 	}'
 
