@@ -1,0 +1,10 @@
+
+config general
+	option adblock 'enabled'
+	list plugins 'adguard-home'
+	list plugins 'dnscrypt'
+	list plugins 'chinadns'
+	list pluginsOtcp 'ss-tunnel'
+	list pluginsOtcp 'ssr-tunnel'
+	# list clean_server '1.1.1.1'
+	# list clean_server '9.9.9.9'

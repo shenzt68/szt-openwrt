@@ -1,0 +1,223 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2018-2019 chenhw2 <https://github.com/chenhw2>
+
+START=69
+EXTRA_COMMANDS="rules update"
+
+NAME=dnsmasq-extra
+BLOCK=0.0.0.0
+DATA=/etc/${NAME}.d
+TARGET=/var/dnsmasq.d
+
+uci_get_by_type() {
+	local ret=$(uci get $1.@$2[0].$3 2>/dev/null)
+	echo ${ret:=$4}
+}
+
+uci_bool_by_type() {
+	case "$(uci_get_by_type $1 $2 $3)" in
+		1|on|true|yes|enabled) return 0;;
+	esac
+	return 1
+}
+
+start() {
+	echo -en "Geneareting : $NAME\n    "
+	mkdir -p ${TARGET}
+
+	for plugin in $(uci_get_by_type ${NAME} general plugins); do
+		[ -x /usr/bin/${plugin} ] && {
+			if echo ${plugin} | grep -q 'tunnel'; then
+				plugin_alias=$(echo -n ${plugin} | sed 's/ss/shadowsocks/g; s/-tunnel//g')
+				plugin_srv=$(uci_get_by_type ${plugin_alias} port_forward server nil)
+				[ "V${plugin_srv}" == "Vnil" ] && continue
+				plugin_port=$(uci_get_by_type ${plugin_alias} port_forward local_port 5300)
+			else
+				plugin_port=$(uci_get_by_type ${plugin} ${plugin} port 0000)
+				[ "V${port_forward}" == "V0000" ] && continue
+			fi
+			echo -n "plugin:${plugin}, " | tr [a-z] [A-Z]
+			sed "s/^/server=\//;s/$/\/127.0.0.1#${plugin_port}/" ${DATA}/gfwlist ${DATA}/tldn > ${TARGET}/plugin_${plugin}.conf
+		}
+	done
+
+	for plugin in $(uci_get_by_type ${NAME} general pluginsOtcp); do
+		[ -x /usr/bin/${plugin} ] && {
+			if echo ${plugin} | grep -q 'tunnel'; then
+				plugin_alias=$(echo -n ${plugin} | sed 's/ss/shadowsocks/g; s/-tunnel//g')
+				plugin_srv=$(uci_get_by_type ${plugin_alias} port_forward server nil)
+				[ "V${plugin_srv}" == "Vnil" ] && continue
+				plugin_port=$(uci_get_by_type ${plugin_alias} port_forward local_port 5300)
+				
+			else
+				plugin_port=$(uci_get_by_type ${plugin} ${plugin} port 0000)
+				[ "V${port_forward}" == "V0000" ] && continue
+			fi
+
+			plugin_tcpport=$((plugin_port + 1))
+			( /usr/bin/dns-forwarder -p $plugin_tcpport -s 127.0.0.1:$plugin_port -t pluginsOtcp >/dev/null 2>&1 ) &
+
+			echo -n "plugin-tcp:${plugin}, " | tr [a-z] [A-Z]
+			sed "s/^/server=\//;s/$/\/127.0.0.1#${plugin_tcpport}/" ${DATA}/gfwlist ${DATA}/tldn > ${TARGET}/plugin-tcp_${plugin}.conf
+		}
+	done
+
+	local tcpport=8300
+	for server in $(uci_get_by_type ${NAME} general clean_server); do
+		tcpport=$((tcpport + 1))
+		( /usr/bin/dns-forwarder -p $tcpport -s ${server}:53 -t cleanOtcp >/dev/null 2>&1 ) &
+		echo -n "CLEAN-DNS:${server}, " && sed "s/^/server=\//;s/$/\/${server}/" ${DATA}/gfwlist ${DATA}/tldn > ${TARGET}/clean_${server}.conf
+		echo -n "CLEAN-DNS-TCP:${server}, " && sed "s/^/server=\//;s/$/\/127.0.0.1#${tcpport}/" ${DATA}/gfwlist ${DATA}/tldn >> ${TARGET}/clean_${server}.conf
+	done
+
+	[ 0 -lt $(sed -n '/wan_bp_list/p' /etc/config/shadowsocks* 2>/dev/null | grep -c 'chnroute') ] &&
+		echo -n "IPSET:ss(r)_bp for chnroute, " && {
+			sed "s/^/ipset=\//;s/$/\/ss_spec_dst_bp/"  ${DATA}/direct >  ${TARGET}/ipset_direct.conf
+			sed "s/^/ipset=\//;s/$/\/ssr_spec_dst_bp/" ${DATA}/direct >> ${TARGET}/ipset_direct.conf
+			sed "s/^/server=\//;s/$/\/#/"              ${DATA}/direct >> ${TARGET}/ipset_direct.conf
+			echo 'ipset=/cloudflare-dns.com/ss_spec_dst_sp'  >> ${TARGET}/ipset_direct.conf
+			echo 'ipset=/cloudflare-dns.com/ssr_spec_dst_sp' >> ${TARGET}/ipset_direct.conf
+			uci_get_by_type ${NAME} general clean_server | sed "s/^/ipset=\//;s/$/\/ss_spec_dst_bp/"  >> ${TARGET}/ipset_direct.conf
+			uci_get_by_type ${NAME} general clean_server | sed "s/^/ipset=\//;s/$/\/ssr_spec_dst_bp/" >> ${TARGET}/ipset_direct.conf
+		}
+
+	if [ 0 -lt $(sed -n '/wan_bp_list/p' /etc/config/shadowsocks* 2>/dev/null | grep -c 'flag_gfwlist') ]; then
+		echo -n "IPSET:gfwlist, " && sed "s/^/ipset=\//;s/$/\/gfwlist/" ${DATA}/gfwlist > ${TARGET}/ipset_gfwlist.conf
+
+		ipset -X gfwlist 2>/dev/null
+		ipset -! -R <<-EOF 2>/dev/null
+			create gfwlist hash:net hashsize 64
+			flush gfwlist
+			add gfwlist 1.0.0.1
+			add gfwlist 8.8.4.4
+			add gfwlist 168.95.1.1
+			add gfwlist 202.14.67.4
+			add gfwlist 208.67.220.220
+			add gfwlist 208.67.222.222
+			add gfwlist 91.108.4.0/22
+			add gfwlist 91.108.16.0/22
+			add gfwlist 91.108.56.0/22
+			add gfwlist 109.239.140.0/24
+			add gfwlist 108.168.174.0/27
+			add gfwlist 149.154.160.0/22
+			add gfwlist 149.154.164.0/22
+			add gfwlist 149.154.168.0/22
+			add gfwlist 149.154.172.0/22
+			add gfwlist 158.85.224.160/27
+			add gfwlist 158.85.46.128/27
+			add gfwlist 158.85.5.192/27
+			add gfwlist 173.192.222.160/27
+			add gfwlist 173.192.231.32/27
+			add gfwlist 174.37.243.64/27
+			add gfwlist 184.173.147.32/27
+			add gfwlist 208.43.122.128/27
+			add gfwlist 109.239.140.0/24
+			add gfwlist 50.22.198.204/30
+			$(head -n 50 ${DATA}/gfwlist | sed -nr 's/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\nadd gfwlist \1/;s/^.*\n//p')
+EOF
+	fi
+
+	uci_bool_by_type ${NAME} general adblock && {
+		echo -n "ABDLOCK, " && sed "s/^/address=\//;s/$/\/${BLOCK}/" ${DATA}/adblock > ${TARGET}/misc_adblock.conf
+	}
+
+	echo -n "CUSTOM" && echo -e "all-servers\nconf-file=${DATA}/custom.conf" > ${TARGET}/misc_custom.conf
+
+	sed '/\/\//d; /[0-9]\/[0-9]/d' -i ${TARGET}/*
+
+	( /etc/init.d/dnsmasq restart >/dev/null 2>&1 ) && rules
+	echo " ."
+}
+
+cleanup() {
+	ipset -F gfwlist 2>/dev/null
+	ipset -X gfwlist 2>/dev/null
+
+	echo -n "Stopping $NAME"
+	rm -rf ${TARGET}/misc_*.conf 2>/dev/null
+	rm -rf ${TARGET}/ipset_*.conf 2>/dev/null
+	rm -rf ${TARGET}/plugin_*.conf 2>/dev/null
+	rm -rf ${TARGET}/clean*.conf 2>/dev/null
+	rm -rf ${TARGET}/*-tcp_*.conf 2>/dev/null
+
+	kill -9 $(pgrep -f Otcp) >/dev/null 2>&1
+	echo " ."
+}
+
+stop() {
+	cleanup
+	/etc/init.d/dnsmasq restart >/dev/null 2>&1
+	rules
+	echo " ."
+}
+
+restart() {
+	echo "Restarting $NAME... "
+	cleanup
+	sleep 1
+	start
+}
+
+update(){
+	update_sub 'gfwlist'
+	update_sub 'direct'
+	update_chn
+}
+
+update_sub(){
+	sub=$1
+	file="/etc/${NAME}.d/${sub}"
+	src="https://raw.githubusercontent.com/chenhw2/openwrt-${NAME}/master/${NAME}/files/data/${sub}"
+
+	oldHash=$(md5sum ${file} 2>/dev/null | sed 's/ .*//g')
+	newHash=$(curl --connect-timeout 5 --max-time 20 -ksSL ${src}.md5sum | sed 's/ .*//g')
+
+	# echo $oldHash $newHash
+	[ "Z$oldHash" == "Z" -o "Z$newHash" == "Z" ] && return 1
+	[ "$oldHash" == "$newHash" ] && echo "# $file NOT Needed Updated" && return 0
+
+	bak="/tmp/${sub}.backup"
+	cp -f "${file}" "${bak}"
+	curl --connect-timeout 10 --max-time 60 -ksSL ${src} -o ${file}
+	oldHash=$(md5sum "${file}" | sed 's/ .*//g')
+	[ "Z$oldHash" == "Z$newHash" ] && {
+		echo "# ${file} Updated"
+		rm -f "${bak}"
+		return 0
+	}
+
+	echo "# $file is broken, failsafe Now!"
+	rm -f "${file}"
+	cp -f "${bak}" "${file}" || cp -f "/rom${file}" "${file}"
+}
+
+update_chn(){
+	chnroute=/etc/${NAME}.d/chnroute.txt
+	[ "Z$chnroute" != "Z" ] || return 0
+
+	chnsrc='https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt'
+
+	echo "# $chnroute Updating"
+	curl --connect-timeout 10 --max-time 120 -ksSL $chnsrc -o $chnroute
+	if [ $? -eq 0 ]; then
+		echo "# $chnroute Updated"
+	else
+		echo "# $chnroute NOT Updated"
+	fi
+
+	if [ ! -f "$chnroute" ] || [ $(ls -l "$chnroute" | awk '{print $5}') -lt 4096 ]; then
+		echo "# $chnroute is broken, failsafe Now!"
+		rm -f "$chnroute"
+		cp -f "/rom$chnroute" "$chnroute"
+	fi
+}
+
+rules(){
+	while iptables -t nat -D PREROUTING -p udp --dport 53 -j REDIRECT --to 53 2>/dev/null; do :; done
+	while iptables -t mangle -D PREROUTING -p udp --dport 53 -j RETURN 2>/dev/null; do :; done
+
+	[ -f ${TARGET}/misc_custom.conf ] || exit 0
+
+	iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to 53
+	iptables -t mangle -I PREROUTING -p udp --dport 53 -j RETURN
+}
