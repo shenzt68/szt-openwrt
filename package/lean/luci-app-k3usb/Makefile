@@ -14,18 +14,12 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Build/Configure
-endef
-
-define Build/Compile
-endef
-
 define Package/$(PKG_NAME)
 	SECTION:=luci
 	CATEGORY:=LuCI
 	SUBMENU:=3. Applications
 	TITLE:=LuCI Support for k3usb3.0 on or off
-	DEPENDS:=
+	DEPENDS:=@TARGET_bcm53xx_DEVICE_phicomm-k3
 endef
 
 define Package/$(PKG_NAME)/description
@@ -35,6 +29,12 @@ endef
 define Build/Prepare
 	$(foreach po,$(wildcard ${CURDIR}/files/luci/i18n/*.po), \
 		po2lmo $(po) $(PKG_BUILD_DIR)/$(patsubst %.po,%.lmo,$(notdir $(po)));)
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/install
