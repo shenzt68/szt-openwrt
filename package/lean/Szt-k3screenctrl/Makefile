@@ -5,8 +5,8 @@ PKG_VERSION:=1.0
 PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/shenzt68/Szt-k3screenctrl.git
-PKG_SOURCE_VERSION:=0936a923a181fde0b3df1b89c1ae6197c5a9dce9
+PKG_SOURCE_URL:=https://github.com/shenzt68/k3screenctrl.git
+PKG_SOURCE_VERSION:=9d43988dce83aabdb57cff66346c0089f79018aa
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_SOURCE_VERSION)
 PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.xz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
@@ -20,9 +20,9 @@ TARGET_CFLAGS+= -D_GNU_SOURCE
 define Package/$(PKG_NAME)
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=@TARGET_bcm53xx_DEVICE_phicomm-k3 +@BUSYBOX_CONFIG_ARPING +@KERNEL_DEVMEM +bash
+  DEPENDS:=@TARGET_bcm53xx_generic_DEVICE_phicomm-k3  +@KERNEL_DEVMEM +@BUSYBOX_CONFIG_ARP +@BUSYBOX_CONFIG_OD +@BUSYBOX_CONFIG_ARPING +bash  +jq +bc
   TITLE:=LCD screen controller on PHICOMM K3
-  URL:= https://github.com/shenzt68/Szt-k3screenctrl.git
+  URL:=https://github.com/shenzt68/Szt-k3screenctrl-new.git 
 endef
 
 define Package/$(PKG_NAME)/description
