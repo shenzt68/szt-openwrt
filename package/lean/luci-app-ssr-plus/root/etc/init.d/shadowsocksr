@@ -124,6 +124,7 @@ EOF
 EOF
       elif [ "$stype" == "v2ray" ] ;then
         lua /usr/share/shadowsocksr/genv2config.lua $GLOBAL_SERVER tcp $(uci_get_by_name $1 local_port) > /var/etc/v2-ssr-retcp.json
+        sed -i 's/\\//g' /var/etc/v2-ssr-retcp.json
 fi
 }
 
@@ -183,8 +184,16 @@ start_rules() {
 	gfwmode="-r"
 	elif [ "$run_mode" = "oversea" ]; then
 	gfwmode="-c"
+	elif [ "$run_mode" = "all" ]; then
+	gfwmode="-z"
 	fi
 	
+	local dports=$(uci_get_by_type global dports 1)
+  if [ $dports = "1" ] ;then
+	proxyport=" "
+	else
+	proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443 "
+  fi
 
 	/usr/bin/ssr-rules \
 		-s "$server" \
@@ -197,6 +206,7 @@ start_rules() {
 		-w "$(uci_get_by_type access_control wan_fw_ips)" \
 		-p "$(uci_get_by_type access_control lan_fp_ips)" \
 		-G "$(uci_get_by_type access_control lan_gm_ips)" \
+		-D "$proxyport" \
 		$(get_arg_out) $gfwmode $ARG_UDP
 			
 	return $?
@@ -268,16 +278,16 @@ start_redir() {
 	#deal kcp
 	local kcp_enable=$(uci_get_by_name $GLOBAL_SERVER kcp_enable 0)
 	if [ $kcp_enable = "1" ] ;then
-		[ ! -f "/usr/bin/ssr-kcptun" ]  &&  return 1
+		[ ! -f "/usr/bin/kcptun-client" ]  &&  return 1
 		
-		local kcp_str=`/usr/bin/ssr-kcptun -v |grep kcptun|wc -l`
+		local kcp_str=`/usr/bin/kcptun-client -v |grep kcptun|wc -l`
 		[ "0" = $kcp_str ] && return 1
 		local kcp_port=$(uci_get_by_name $GLOBAL_SERVER kcp_port)
 		local server_port=$(uci_get_by_name $GLOBAL_SERVER server_port)
 		local password=$(uci_get_by_name $GLOBAL_SERVER kcp_password)
 		local kcp_param=$(uci_get_by_name $GLOBAL_SERVER kcp_param)
 		[ "$password" != "" ] && password="--key "${password}
-		service_start /usr/bin/ssr-kcptun \
+		service_start /usr/bin/kcptun-client \
 			-r $kcp_server:$kcp_port \
 			-l :$server_port $password $kcp_param 
 		kcp_enable_flag=1
@@ -335,6 +345,7 @@ start_redir() {
       $ucmd -c $last_config_file $ARG_OTA -U -f /var/run/ssr-reudp.pid >/dev/null 2>&1
     elif [ "$utype" == "v2ray" ] ; then
         lua /usr/share/shadowsocksr/genv2config.lua $UDP_RELAY_SERVER udp $(uci_get_by_name $UDP_RELAY_SERVER local_port) > /var/etc/v2-ssr-reudp.json
+        sed -i 's/\\//g' /var/etc/v2-ssr-reudp.json
         $ucmd -config /var/etc/v2-ssr-reudp.json >/dev/null 2>&1 &   
     fi
    fi
@@ -369,6 +380,7 @@ start_redir() {
 		fi
 	fi
 	add_cron
+
 	return $?
 }
 
@@ -469,8 +481,11 @@ start() {
 	GLOBAL_SERVER=$switch_server
 	switch_enable=1
 	fi
+
 	if rules ;then
 	start_redir
+	
+	/usr/share/shadowsocksr/gfw2ipset.sh
   
   mkdir -p /tmp/dnsmasq.d
 	if ! [ "$run_mode" = "oversea" ] ;then
@@ -514,22 +529,22 @@ stop() {
 	iptables -X SSR-SERVER-RULE 2>/dev/null
 	fi
 	if [ -z "$switch_server" ] ;then
-    kill -9 $(ps | grep ssr-switch | grep -v grep | awk '{print $1}') >/dev/null 2>&1
+    kill -9 $(busybox ps -w | grep ssr-switch | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 	fi
 	if [ $(uci_get_by_type global monitor_enable) = 1 ] ;then
-    kill -9 $(ps | grep ssr-monitor | grep -v grep | awk '{print $1}') >/dev/null 2>&1
+    kill -9 $(busybox ps -w | grep ssr-monitor | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 	fi
 	killall -q -9 ssr-monitor
 	killall -q -9 ss-redir
 	killall -q -9 ssr-redir
 	killall -q -9 v2ray
 	killall -q -9 ssr-server
-	killall -q -9 ssr-kcptun
+	killall -q -9 kcptun-client
 	killall -q -9 ssr-local
 	if [ -f /var/run/pdnsd.pid ] ;then
     kill $(cat /var/run/pdnsd.pid) >/dev/null 2>&1
   else 
-    kill -9 $(ps | grep pdnsd | grep -v grep | awk '{print $1}') >/dev/null 2>&1 
+    kill -9 $(busybox ps -w | grep pdnsd | grep -v grep | awk '{print $1}') >/dev/null 2>&1 
 	fi
 	
 	if [ -f "/tmp/dnsmasq.d/dnsmasq-ssr.conf" ]; then
