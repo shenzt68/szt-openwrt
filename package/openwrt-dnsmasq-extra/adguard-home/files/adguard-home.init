@@ -41,10 +41,12 @@ start_service() {
 	cat <<-EOF > "/var/etc/${NAME}/AdGuardHome.yaml"
 bind_host: 0.0.0.0
 bind_port: $(uci_get_by_type $NAME http_port 7680)
+auth_name: AdGuardHome
+auth_pass: AdGuardHome
 language: $(uci_get_by_type $NAME language en-us)
 dns:
   bind_host: 0.0.0.0
-  port: $(uci_get_by_type $NAME port 7600)
+  port: $(uci_get_by_type $NAME port 5335)
   protection_enabled: true
   filtering_enabled: true
   querylog_enabled: true
