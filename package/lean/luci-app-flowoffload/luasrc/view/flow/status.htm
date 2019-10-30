@@ -5,7 +5,6 @@
 		<div class="tr"><div class="td left" width="33%">BBR 加速</div><div class="td left" id="_down_state"><em><%:Collecting data...%></em></div></div>
 		<div class="tr"><div class="td left" width="33%">FULLCONE NAT加速</div><div class="td left" id="_up_state"><em><%:Collecting data...%></em></div></div>
 		<div class="tr"><div class="td left" width="33%">DNS 加速</div><div class="td left" id="_dns_state"><em><%:Collecting data...%></em></div></div>
-		<div class="tr"><div class="td left" width="33%">AdGuardHome 去广告</div><div class="td left" id="_ad_state"><em><%:Collecting data...%></em></div></div>
 	</div> 
 </fieldset>
 
@@ -21,7 +20,6 @@
 			down_state.innerHTML = status.down_state ? '<em><b><font color=green><%:RUNNING%></font></b></em>' : '<em><b><font color=red><%:NOT RUNNING%></font></b></em>';
 			up_state.innerHTML = status.up_state ? '<em><b><font color=green><%:RUNNING%></font></b></em>' : '<em><b><font color=red><%:NOT RUNNING%></font></b></em>';
 			dns_state.innerHTML = status.dns_state ? '<em><b><font color=green><%:RUNNING%></font></b></em>' : '<em><b><font color=red><%:NOT RUNNING%></font></b></em>';
-			ad_state.innerHTML = status.ad_state ? '<em><b><font color=green><%:RUNNING%></font></b></em>' : '<em><b><font color=red><%:NOT RUNNING%></font></b></em>';
 		}
 	});
 //]]></script>

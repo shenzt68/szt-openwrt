@@ -5,7 +5,11 @@
 local m, s, sec, o, kcp_enable
 local shadowsocksr = "shadowsocksr"
 local uci = luci.model.uci.cursor()
-
+local trport = 7680
+local button = ""
+if luci.sys.call("pidof adguard-home  >/dev/null") == 0 then
+		button = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"button\" value=\" " .. translate("Open Web Interface") .. " \" onclick=\"window.open('http://'+window.location.hostname+':" .. trport .. "')\"/>"
+	end
 local sys = require "luci.sys"
 
 m = Map(shadowsocksr, translate("ShadowSocksR Plus+ Settings"))
@@ -64,10 +68,10 @@ o:value("1", translate("All Ports"))
 o:value("2", translate("Only Common Ports"))
 o.default = 1
 
-o = s:option(ListValue, "pdnsd_enable", translate("Resolve Dns Mode"))
-o:value("1", translate("Use Pdnsd tcp query and cache"))
+o = s:option(ListValue, "pdnsd_enable", translate("Resolve Dns Mode"), translate("AdGuardHome's login username/passwd: AdGuardHome, web console addr: IP:7680") .. button)
 o:value("0", translate("Use Local DNS Service listen port 5335"))
-o.default = 1
+---o:value("1", translate("Use Pdnsd tcp query and cache"))
+o.default = 0
 
 o = s:option(ListValue, "tunnel_forward", translate("Anti-pollution DNS Server"))
 o:value("8.8.4.4:53", translate("Google Public DNS (8.8.4.4)"))

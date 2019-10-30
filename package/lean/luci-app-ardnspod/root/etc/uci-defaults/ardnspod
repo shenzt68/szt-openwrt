@@ -1,6 +1,0 @@
-#!/bin/sh
-
-/etc/init.d/ardnspod enable && /etc/init.d/ardnspod start
-
-rm -f /tmp/luci-indexcache
-exit 0

@@ -5,7 +5,7 @@ START=90
 USE_PROCD=1
 
 PROG=/usr/bin/zerotier-one
-CONFIG_PATH=/etc/config/zerotier-one
+CONFIG_PATH=/var/lib/zerotier-one
 
 section_enabled() {
 	config_get_bool enabled "$1" 'enabled' 0
@@ -21,13 +21,15 @@ start_instance() {
 		echo "disabled in config"
 		return 1
 	fi
-
-	config_get config_path $cfg 'config_path'
+  
+  [ -d /etc/config/zero ] || mkdir -p /etc/config/zero
+  config_path=/etc/config/zero
+  
 	config_get_bool port $cfg 'port'
 	config_get secret $cfg 'secret'
 
 	# Remove existing link or folder
-	# rm -rf $CONFIG_PATH
+	rm -rf $CONFIG_PATH
 
 	# Create link from CONFIG_PATH to config_path
 	if [ -n "$config_path" -a "$config_path" != $CONFIG_PATH ]; then
